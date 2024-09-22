@@ -850,6 +850,56 @@ private:
     void resetField();
 };
 
+
+/*--------------------------------------------------------*/
+
+class HFORef
+    : public Referee {
+private:
+    static const char * oobMsg;
+    static const char * capturedMsg;
+    static const char * goalMsg;
+    static const char * ootMsg;
+    static const char * doneMsg;
+    static const char * inGameMsg;
+    static const int TURNOVER_TIME;
+    int M_episode;
+    int M_offense, M_defense;
+    int M_time;
+    int M_take_time;
+    int M_holder_unum;
+    char M_holder_side; // 'L' = left, 'R' = Right, 'U' = Unknown/Neutral
+    PVector M_prev_ball_pos;
+    int M_untouched_time;
+    int M_episode_over_time;
+    boost::mt19937 M_rng;
+    std::vector<std::pair<int,int> > M_offsets;
+
+public:
+    HFORef( Stadium & stadium );
+
+    virtual
+    ~HFORef()
+      { }
+
+    virtual
+    void analyse();
+
+    virtual
+    void playModeChange( PlayMode pm );
+
+private:
+    bool inHFOArea(const PVector& pos);
+
+    void logHeader();
+
+    void logEpisode( const char *endCond );
+
+    void resetField();
+};
+
+
+
 /*--------------------------------------------------------*/
 
 class PenaltyRef
