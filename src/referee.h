@@ -32,948 +32,1015 @@
 #include <set>
 #include <vector>
 
+// #include <random>
+// #include <ctime>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
 class Stadium;
 class Player;
 class Team;
 
-class Referee {
+class Referee
+{
 private:
-    // not used
-    Referee() = delete;
-    const Referee & operator=( const Referee & ) = delete;
+  // not used
+  Referee() = delete;
+  const Referee &operator=(const Referee &) = delete;
 
 protected:
-    Stadium & M_stadium;
+  Stadium &M_stadium;
 
-    explicit
-    Referee( Stadium & stadium )
-        : M_stadium( stadium )
-      { }
+  explicit Referee(Stadium &stadium)
+      : M_stadium(stadium)
+  {
+  }
+
 public:
+  virtual ~Referee()
+  {
+  }
 
-    virtual
-    ~Referee()
-      { }
+  virtual void kickTaken(const Player &,
+                         const double) = 0;
 
-    virtual
-    void kickTaken( const Player &,
-                    const double ) = 0;
+  virtual void failedKickTaken(const Player &) = 0;
 
-    virtual
-    void failedKickTaken( const Player & ) = 0;
+  virtual void tackleTaken(const Player &,
+                           const double,
+                           const bool) = 0;
 
-    virtual
-    void tackleTaken( const Player &,
-                      const double,
-                      const bool ) = 0;
+  virtual void failedTackleTaken(const Player &,
+                                 const bool) = 0;
 
-    virtual
-    void failedTackleTaken( const Player &,
-                            const bool ) = 0;
+  virtual void ballCaught(const Player &) = 0;
 
-    virtual
-    void ballCaught( const Player & ) = 0;
+  virtual void ballPunched(const Player &) = 0;
 
-    virtual
-    void ballPunched( const Player & ) = 0;
+  virtual void ballTouched(const Player &) = 0;
 
-    virtual
-    void ballTouched( const Player & ) = 0;
+  virtual void analyse() = 0;
 
-    virtual
-    void analyse() = 0;
+  virtual void playModeChange(PlayMode) = 0;
 
-    virtual
-    void playModeChange( PlayMode ) = 0;
+  //
+  //
+  //
 
-    //
-    //
-    //
+  // static
+  // void doAnalyse( Referee * ref )
+  //   {
+  //       ref->analyse();
+  //   }
 
-    // static
-    // void doAnalyse( Referee * ref )
-    //   {
-    //       ref->analyse();
-    //   }
+  //
+  //
+  //
 
-    //
-    //
-    //
+  // class doKickTaken {
+  // private:
+  //     const Player & M_kicker;
+  //     const double M_accel_r;
+  // public:
+  //     doKickTaken( const Player & kicker,
+  //                  const double accel_r )
+  //         : M_kicker( kicker ),
+  //           M_accel_r( accel_r )
+  //       { }
 
-    // class doKickTaken {
-    // private:
-    //     const Player & M_kicker;
-    //     const double M_accel_r;
-    // public:
-    //     doKickTaken( const Player & kicker,
-    //                  const double accel_r )
-    //         : M_kicker( kicker ),
-    //           M_accel_r( accel_r )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->kickTaken( M_kicker, M_accel_r );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->kickTaken( M_kicker, M_accel_r );
-    //       }
-    // };
+  // class doFailedKickTaken {
+  // private:
+  //     const Player & M_kicker;
+  // public:
+  //     doFailedKickTaken( const Player & kicker )
+  //         : M_kicker( kicker )
+  //       { }
 
-    // class doFailedKickTaken {
-    // private:
-    //     const Player & M_kicker;
-    // public:
-    //     doFailedKickTaken( const Player & kicker )
-    //         : M_kicker( kicker )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->failedKickTaken( M_kicker );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->failedKickTaken( M_kicker );
-    //       }
-    // };
+  // class doTackleTaken {
+  // private:
+  //     const Player & M_tackler;
+  //     const double M_accel_r;
+  //     const bool M_foul;
+  // public:
+  //     doTackleTaken( const Player & tackler,
+  //                    const double accel_r,
+  //                    const bool foul )
+  //         : M_tackler( tackler ),
+  //           M_accel_r( accel_r ),
+  //           M_foul( foul )
+  //       { }
 
-    // class doTackleTaken {
-    // private:
-    //     const Player & M_tackler;
-    //     const double M_accel_r;
-    //     const bool M_foul;
-    // public:
-    //     doTackleTaken( const Player & tackler,
-    //                    const double accel_r,
-    //                    const bool foul )
-    //         : M_tackler( tackler ),
-    //           M_accel_r( accel_r ),
-    //           M_foul( foul )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->tackleTaken( M_tackler, M_accel_r, M_foul );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->tackleTaken( M_tackler, M_accel_r, M_foul );
-    //       }
-    // };
+  // class doFailedTackleTaken {
+  // private:
+  //     const Player & M_tackler;
+  //     const bool M_foul;
+  // public:
+  //     doFailedTackleTaken( const Player & tackler,
+  //                          const bool foul )
+  //         : M_tackler( tackler ),
+  //           M_foul( foul )
+  //       { }
 
-    // class doFailedTackleTaken {
-    // private:
-    //     const Player & M_tackler;
-    //     const bool M_foul;
-    // public:
-    //     doFailedTackleTaken( const Player & tackler,
-    //                          const bool foul )
-    //         : M_tackler( tackler ),
-    //           M_foul( foul )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->failedTackleTaken( M_tackler, M_foul );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->failedTackleTaken( M_tackler, M_foul );
-    //       }
-    // };
+  // class doCaughtBall {
+  // private:
+  //     const Player & M_catcher;
+  // public:
+  //     doCaughtBall( const Player & catcher )
+  //         : M_catcher( catcher )
+  //       { }
 
-    // class doCaughtBall {
-    // private:
-    //     const Player & M_catcher;
-    // public:
-    //     doCaughtBall( const Player & catcher )
-    //         : M_catcher( catcher )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->ballCaught( M_catcher );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->ballCaught( M_catcher );
-    //       }
-    // };
+  // class doPunchedBall {
+  // private:
+  //     const Player & M_goalie;
+  // public:
+  //     doPunchedBall( const Player & goalie )
+  //         : M_goalie( goalie )
+  //       { }
 
-    // class doPunchedBall {
-    // private:
-    //     const Player & M_goalie;
-    // public:
-    //     doPunchedBall( const Player & goalie )
-    //         : M_goalie( goalie )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->ballPunched( M_goalie );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->ballPunched( M_goalie );
-    //       }
-    // };
+  // class doPlayModeChange {
+  // private:
+  //     PlayMode M_pm;
+  // public:
+  //     doPlayModeChange( PlayMode pm )
+  //         : M_pm( pm )
+  //       { }
 
-    // class doPlayModeChange {
-    // private:
-    //     PlayMode M_pm;
-    // public:
-    //     doPlayModeChange( PlayMode pm )
-    //         : M_pm( pm )
-    //       { }
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->playModeChange( M_pm );
+  //       }
+  // };
 
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->playModeChange( M_pm );
-    //       }
-    // };
+  // class doBallTouched {
+  // private:
+  //     const Player & M_player;
+  // public:
+  //     doBallTouched( const Player & player )
+  //         : M_player( player )
+  //       { }
 
-    // class doBallTouched {
-    // private:
-    //     const Player & M_player;
-    // public:
-    //     doBallTouched( const Player & player )
-    //         : M_player( player )
-    //       { }
-
-    //     void operator()( Referee * ref )
-    //       {
-    //           ref->ballTouched( M_player );
-    //       }
-    // };
-
+  //     void operator()( Referee * ref )
+  //       {
+  //           ref->ballTouched( M_player );
+  //       }
+  // };
 
 protected:
+  void awardFreeKick(const Side side,
+                     PVector pos);
 
-    void awardFreeKick( const Side side,
-                        PVector pos );
+  void awardGoalKick(const Side side,
+                     PVector pos);
 
-    void awardGoalKick( const Side side,
-                        PVector pos );
+  void awardDropBall(PVector pos);
 
-    void awardDropBall( PVector pos );
+  void awardKickIn(const Side side,
+                   PVector pos);
 
-    void awardKickIn( const Side side,
-                      PVector pos );
+  void awardCornerKick(const Side side,
+                       PVector pos);
 
-    void awardCornerKick( const Side side,
-                          PVector pos );
+  bool crossGoalLine(const Side side,
+                     const PVector &prev_ball_pos);
 
-    bool crossGoalLine( const Side side,
-                        const PVector & prev_ball_pos );
+  void placePlayersInTheirField();
 
-    void placePlayersInTheirField();
+  void clearPlayersFromBall(const Side side);
 
-    void clearPlayersFromBall( const Side side );
-
-
-    void checkFoul( const Player & tackler,
-                    const bool foul,
-                    bool * detect_charge,
-                    bool * detect_yellow,
-                    bool * detect_red );
+  void checkFoul(const Player &tackler,
+                 const bool foul,
+                 bool *detect_charge,
+                 bool *detect_yellow,
+                 bool *detect_red);
 
 public:
-    static
-    PVector truncateToPitch( PVector ball_pos );
+  static PVector truncateToPitch(PVector ball_pos);
 
-    static
-    PVector moveOutOfPenalty( const Side side,
-                              PVector ball_pos );
+  static PVector moveOutOfPenalty(const Side side,
+                                  PVector ball_pos);
 
-    static
-    PVector moveOutOfGoalArea( const Side side,
-                               PVector ball_pos );
+  static PVector moveOutOfGoalArea(const Side side,
+                                   PVector ball_pos);
 
-    static
-    PVector moveIntoPenalty( const Side side,
-                             PVector ball_pos );
+  static PVector moveIntoPenalty(const Side side,
+                                 PVector ball_pos);
 
-    static
-    bool inPenaltyArea( const Side side,
-                        const PVector & pos );
+  static bool inPenaltyArea(const Side side,
+                            const PVector &pos);
 
-    static
-    bool isPenaltyShootOut( const PlayMode pm,
-                            const Side side = NEUTRAL );
-
+  static bool isPenaltyShootOut(const PlayMode pm,
+                                const Side side = NEUTRAL);
 };
 
 /*--------------------------------------------------------*/
 
 class TimeRef
-    : public Referee {
+    : public Referee
+{
 private:
-
 public:
-    explicit
-    TimeRef( Stadium & stadium )
-        : Referee( stadium )
-      { }
+  explicit TimeRef(Stadium &stadium)
+      : Referee(stadium)
+  {
+  }
 
-    void kickTaken( const Player &,
-                    const double )
-      { }
+  void kickTaken(const Player &,
+                 const double)
+  {
+  }
 
-    void failedKickTaken( const Player & )
-      { }
+  void failedKickTaken(const Player &)
+  {
+  }
 
-    void tackleTaken( const Player &,
-                      const double,
-                      const bool )
-      { }
+  void tackleTaken(const Player &,
+                   const double,
+                   const bool)
+  {
+  }
 
-    void failedTackleTaken( const Player &,
-                            const bool )
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool)
+  {
+  }
 
-    void ballCaught( const Player & )
-      { }
+  void ballCaught(const Player &)
+  {
+  }
 
-    void ballPunched( const Player & )
-      { }
+  void ballPunched(const Player &)
+  {
+  }
 
-    void ballTouched( const Player & )
-      { }
+  void ballTouched(const Player &)
+  {
+  }
 
-    void analyse();
+  void analyse();
 
-    void playModeChange( PlayMode )
-      { }
+  void playModeChange(PlayMode)
+  {
+  }
 };
 
 /*--------------------------------------------------------*/
 
 class BallStuckRef
-    : public Referee {
+    : public Referee
+{
 private:
-    PVector M_last_ball_pos;
-    int M_counter;
+  PVector M_last_ball_pos;
+  int M_counter;
 
 public:
-    explicit
-    BallStuckRef( Stadium & stadium )
-        : Referee( stadium ),
-          M_last_ball_pos( 0.0, 0.0 ),
-          M_counter( 0 )
-      { }
+  explicit BallStuckRef(Stadium &stadium)
+      : Referee(stadium),
+        M_last_ball_pos(0.0, 0.0),
+        M_counter(0)
+  {
+  }
 
-    void kickTaken( const Player &,
-                    const double ) override
-      { }
+  void kickTaken(const Player &,
+                 const double) override
+  {
+  }
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player &,
-                      const double,
-                      const bool ) override
-      { }
+  void tackleTaken(const Player &,
+                   const double,
+                   const bool) override
+  {
+  }
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & ) override
-      { }
+  void ballTouched(const Player &) override
+  {
+  }
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode ) override
-      { }
+  void playModeChange(PlayMode) override
+  {
+  }
 };
 
 /*--------------------------------------------------------*/
 
 class OffsideRef
-    : public Referee {
+    : public Referee
+{
 private:
+  struct Candidate
+  {
+  private:
+    Candidate();
 
-    struct Candidate {
-    private:
-        Candidate();
-    public:
-        const Player * player_;
-        PVector pos_;
+  public:
+    const Player *player_;
+    PVector pos_;
 
-        Candidate( const Player * player,
-                   const double & x,
-                   const double & y )
-            : player_( player ),
-              pos_( x, y )
-          { }
-    };
+    Candidate(const Player *player,
+              const double &x,
+              const double &y)
+        : player_(player),
+          pos_(x, y)
+    {
+    }
+  };
 
-    static const int AFTER_OFFSIDE_WAIT;
+  static const int AFTER_OFFSIDE_WAIT;
 
-    int M_last_kick_time;
-    int M_last_kick_stoppage_time;
-    double M_last_kick_accel_r;
-    Side M_last_kicker_side;
-    std::vector< Candidate > M_offside_candidates;
+  int M_last_kick_time;
+  int M_last_kick_stoppage_time;
+  double M_last_kick_accel_r;
+  Side M_last_kicker_side;
+  std::vector<Candidate> M_offside_candidates;
 
-    PVector M_offside_pos;
-    int M_after_offside_time;
+  PVector M_offside_pos;
+  int M_after_offside_time;
 
 public:
-    explicit
-    OffsideRef( Stadium & stadium )
-        : Referee( stadium ),
-          M_last_kick_time( -1 ),
-          M_last_kick_stoppage_time( -1 ),
-          M_last_kick_accel_r( 0.0 ),
-          M_last_kicker_side( NEUTRAL ),
-          M_offside_pos(),
-          M_after_offside_time( 0 )
-      { }
+  explicit OffsideRef(Stadium &stadium)
+      : Referee(stadium),
+        M_last_kick_time(-1),
+        M_last_kick_stoppage_time(-1),
+        M_last_kick_accel_r(0.0),
+        M_last_kicker_side(NEUTRAL),
+        M_offside_pos(),
+        M_after_offside_time(0)
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r ) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & kicker ) override;
+  void failedKickTaken(const Player &kicker) override;
 
-    void tackleTaken( const Player & tackler,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &tackler,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player & kicker,
-                            const bool ) override;
+  void failedTackleTaken(const Player &kicker,
+                         const bool) override;
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & player ) override;
+  void ballTouched(const Player &player) override;
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
+  void checkIntentionalAction(const Player &kicker);
+  void setOffsideMark(const Player &kicker,
+                      const double accel_r);
 
-    void checkIntentionalAction( const Player & kicker );
-    void setOffsideMark( const Player & kicker,
-                         const double accel_r );
+  void callOffside();
 
-    void callOffside();
-
-    void checkPlayerAfterOffside();
-
+  void checkPlayerAfterOffside();
 };
 
 /*--------------------------------------------------------*/
 
 class IllegalDefenseRef
-    : public Referee {
+    : public Referee
+{
 private:
-    static const int AFTER_ILLEGAL_DEFENSE_WAIT;
+  static const int AFTER_ILLEGAL_DEFENSE_WAIT;
 
-    int M_left_illegal_counter;
-    int M_right_illegal_counter;
-    Side M_last_kicker_side;
-    int M_last_kick_time;
-    int M_after_illegal_defense_time;
+  int M_left_illegal_counter;
+  int M_right_illegal_counter;
+  Side M_last_kicker_side;
+  int M_last_kick_time;
+  int M_after_illegal_defense_time;
 
 public:
-    explicit
-    IllegalDefenseRef( Stadium & stadium )
-        : Referee( stadium ),
-          M_left_illegal_counter( 0 ),
-          M_right_illegal_counter( 0 ),
-          M_after_illegal_defense_time( 0 )
-      { }
+  explicit IllegalDefenseRef(Stadium &stadium)
+      : Referee(stadium),
+        M_left_illegal_counter(0),
+        M_right_illegal_counter(0),
+        M_after_illegal_defense_time(0)
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & tackler,
-                      const double accel_r,
-                      const bool foul) override;
+  void tackleTaken(const Player &tackler,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player & ,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & ) override
-      { }
+  void ballTouched(const Player &) override
+  {
+  }
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
-
-    PVector calculateFreeKickPositon(Side side);
-
+  PVector calculateFreeKickPositon(Side side);
 };
-
 
 /*--------------------------------------------------------*/
 
 class FreeKickRef
-    : public Referee {
+    : public Referee
+{
 private:
-    static const int AFTER_FREE_KICK_FAULT_WAIT;
+  static const int AFTER_FREE_KICK_FAULT_WAIT;
 
-    int M_timer;
+  int M_timer;
 
-    bool M_kick_taken;
-    int M_goal_kick_count;
-    const Player * M_kick_taker;
-    int M_kick_taker_dashes;
+  bool M_kick_taken;
+  int M_goal_kick_count;
+  const Player *M_kick_taker;
+  int M_kick_taker_dashes;
 
-    int M_after_free_kick_fault_time;
+  int M_after_free_kick_fault_time;
+
 public:
-    FreeKickRef( Stadium& stadium )
-        : Referee( stadium ),
-          M_timer( -1 ),
-          M_kick_taken( false ),
-          M_goal_kick_count( 0 ),
-          M_kick_taker( 0 ),
-          M_kick_taker_dashes( 0 ),
-          M_after_free_kick_fault_time( 0 )
-      {}
+  FreeKickRef(Stadium &stadium)
+      : Referee(stadium),
+        M_timer(-1),
+        M_kick_taken(false),
+        M_goal_kick_count(0),
+        M_kick_taker(0),
+        M_kick_taker_dashes(0),
+        M_after_free_kick_fault_time(0)
+  {
+  }
 
-    virtual
-    ~FreeKickRef() override
-      { }
+  virtual ~FreeKickRef() override
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r ) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & kicker,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &kicker,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & player ) override;
+  void ballTouched(const Player &player) override;
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
+  void callFreeKickFault(Side side, PVector pos);
 
-    void callFreeKickFault( Side side, PVector pos );
+  bool goalKick(PlayMode pm);
 
-    bool goalKick( PlayMode pm );
+  bool freeKick(PlayMode pm);
 
-    bool freeKick( PlayMode pm );
+  bool ballStopped();
 
-    bool ballStopped();
+  // bool ballInPenaltyArea();
 
-    //bool ballInPenaltyArea();
+  bool tooManyGoalKicks();
 
-    bool tooManyGoalKicks();
-
-    void placePlayersForGoalkick();
-
+  void placePlayersForGoalkick();
 };
 
 /*--------------------------------------------------------*/
 // touch line referee
 class TouchRef
-    : public Referee {
+    : public Referee
+{
 private:
-    // TODO? move to TimeRef
-    static const int AFTER_GOAL_WAIT;
+  // TODO? move to TimeRef
+  static const int AFTER_GOAL_WAIT;
 
-    const Player * M_last_touched;
-    int M_last_touched_time;
-    double M_last_touched_accel_r;
+  const Player *M_last_touched;
+  int M_last_touched_time;
+  double M_last_touched_accel_r;
 
-    const Player * M_last_indirect_kicker;
-    bool M_indirect_mode;
+  const Player *M_last_indirect_kicker;
+  bool M_indirect_mode;
 
-    int M_after_goal_time;
-    PVector M_prev_ball_pos;
+  int M_after_goal_time;
+  PVector M_prev_ball_pos;
 
 public:
-    TouchRef( Stadium& stadium )
-        : Referee( stadium ),
-          M_last_touched( nullptr ),
-          M_last_touched_time( 0 ),
-          M_last_touched_accel_r( 0.0 ),
-          M_last_indirect_kicker( nullptr ),
-          M_indirect_mode( false ),
-          M_after_goal_time( 0 ),
-          M_prev_ball_pos( 0.0, 0.0 )
-      {}
+  TouchRef(Stadium &stadium)
+      : Referee(stadium),
+        M_last_touched(nullptr),
+        M_last_touched_time(0),
+        M_last_touched_accel_r(0.0),
+        M_last_indirect_kicker(nullptr),
+        M_indirect_mode(false),
+        M_after_goal_time(0),
+        M_prev_ball_pos(0.0, 0.0)
+  {
+  }
 
-    virtual
-    ~TouchRef()
-      {}
+  virtual ~TouchRef()
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r ) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & kicker,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &kicker,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & player ) override;
+  void ballTouched(const Player &player) override;
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
+  void analyseImpl();
 
-    void analyseImpl();
+  bool checkGoal();
 
-    bool checkGoal();
+  void announceGoal(const Team &team);
 
-    void announceGoal( const Team & team );
-
-    bool indirectFreeKick( const PlayMode pm );
-
+  bool indirectFreeKick(const PlayMode pm);
 };
 
 /*--------------------------------------------------------*/
 
 class CatchRef
-    : public Referee {
+    : public Referee
+{
 private:
-    static const int AFTER_BACKPASS_WAIT;
-    static const int AFTER_CATCH_FAULT_WAIT;
+  static const int AFTER_BACKPASS_WAIT;
+  static const int AFTER_CATCH_FAULT_WAIT;
 
-    struct Kicker {
-        int time_;
-        Side side_;
-        int unum_;
-        Kicker( const int time,
-                const Side side,
-                const int unum )
-            : time_( time ),
-              side_( side ),
-              unum_( unum )
-          { }
-    };
+  struct Kicker
+  {
+    int time_;
+    Side side_;
+    int unum_;
+    Kicker(const int time,
+           const Side side,
+           const int unum)
+        : time_(time),
+          side_(side),
+          unum_(unum)
+    {
+    }
+  };
 
-    int M_last_back_passer_time;
-    double M_last_back_passer_accel_r;
-    const Player * M_last_back_passer;
-    const Player * M_before_last_back_passer;
+  int M_last_back_passer_time;
+  double M_last_back_passer_accel_r;
+  const Player *M_last_back_passer;
+  const Player *M_before_last_back_passer;
 
-    bool M_team_l_touched;
-    bool M_team_r_touched;
-    int M_after_back_pass_time;
+  bool M_team_l_touched;
+  bool M_team_r_touched;
+  int M_after_back_pass_time;
 
-    int M_after_catch_fault_time;
+  int M_after_catch_fault_time;
 
 public:
-    explicit
-    CatchRef( Stadium & stadium )
-        : Referee( stadium ),
-          M_last_back_passer_time( 0 ),
-          M_last_back_passer_accel_r( 0.0 ),
-          M_last_back_passer( nullptr ),
-          M_before_last_back_passer( nullptr ),
-          M_team_l_touched( false ),
-          M_team_r_touched( false ),
-          M_after_back_pass_time( 0 ),
-          M_after_catch_fault_time( 0 )
-      { }
+  explicit CatchRef(Stadium &stadium)
+      : Referee(stadium),
+        M_last_back_passer_time(0),
+        M_last_back_passer_accel_r(0.0),
+        M_last_back_passer(nullptr),
+        M_before_last_back_passer(nullptr),
+        M_team_l_touched(false),
+        M_team_r_touched(false),
+        M_after_back_pass_time(0),
+        M_after_catch_fault_time(0)
+  {
+  }
 
-    virtual
-    ~CatchRef()
-      { }
+  virtual ~CatchRef()
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r ) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & kicker,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &kicker,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & catcher ) override;
+  void ballCaught(const Player &catcher) override;
 
-    void ballPunched( const Player & catcher ) override;
+  void ballPunched(const Player &catcher) override;
 
-    void ballTouched( const Player & player ) override;
+  void ballTouched(const Player &player) override;
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pmode ) override;
+  void playModeChange(PlayMode pmode) override;
 
 private:
+  void callBackPass(const Side side);
 
-    void callBackPass( const Side side );
-
-    void callCatchFault( Side side,
-                         PVector pos );
-
+  void callCatchFault(Side side,
+                      PVector pos);
 };
 
 /*--------------------------------------------------------*/
 
 class FoulRef
-    : public Referee {
+    : public Referee
+{
 private:
+  static const int AFTER_FOUL_WAIT;
 
-    static const int AFTER_FOUL_WAIT;
-
-    int M_after_foul_time;
+  int M_after_foul_time;
 
 public:
-    explicit
-    FoulRef( Stadium & stadium)
-        : Referee( stadium ),
-          M_after_foul_time( 0 )
-      { }
+  explicit FoulRef(Stadium &stadium)
+      : Referee(stadium),
+        M_after_foul_time(0)
+  {
+  }
 
-    virtual
-    ~FoulRef() override
-      { }
+  virtual ~FoulRef() override
+  {
+  }
 
-    void kickTaken( const Player &,
-                    const double ) override
-      { }
+  void kickTaken(const Player &,
+                 const double) override
+  {
+  }
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & tackler,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &tackler,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & ) override
-      { }
+  void ballTouched(const Player &) override
+  {
+  }
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
-
-    void callFoul( const Player & tackler );
-    void callYellowCard( const Player & tackler );
-    void callRedCard( const Player & tackler );
-
+  void callFoul(const Player &tackler);
+  void callYellowCard(const Player &tackler);
+  void callRedCard(const Player &tackler);
 };
 
 /*--------------------------------------------------------*/
 
 class KeepawayRef
-    : public Referee {
+    : public Referee
+{
 private:
-    static const char * trainingMsg;
-    static const int TURNOVER_TIME;
-    int M_episode;
-    int M_keepers, M_takers;
-    int M_time;
-    int M_take_time;
+  static const char *trainingMsg;
+  static const int TURNOVER_TIME;
+  int M_episode;
+  int M_keepers, M_takers;
+  int M_time;
+  int M_take_time;
+
 public:
-    KeepawayRef( Stadium & stadium );
+  KeepawayRef(Stadium &stadium);
 
-    virtual
-    ~KeepawayRef() override
-      { }
+  virtual ~KeepawayRef() override
+  {
+  }
 
-    void kickTaken( const Player &,
-                    const double ) override
-      { }
+  void kickTaken(const Player &,
+                 const double) override
+  {
+  }
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player &,
-                      const double,
-                      const bool ) override
-      { }
+  void tackleTaken(const Player &,
+                   const double,
+                   const bool) override
+  {
+  }
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & ) override
-      { }
+  void ballCaught(const Player &) override
+  {
+  }
 
-    void ballPunched( const Player & ) override
-      { }
+  void ballPunched(const Player &) override
+  {
+  }
 
-    void ballTouched( const Player & ) override
-      { }
+  void ballTouched(const Player &) override
+  {
+  }
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
-    bool ballInKeepawayArea();
+  bool ballInKeepawayArea();
 
-    void logHeader();
+  void logHeader();
 
-    void logEpisode( const char *endCond );
+  void logEpisode(const char *endCond);
 
-    void resetField();
+  void resetField();
 };
-
 
 /*--------------------------------------------------------*/
 
 class HFORef
-    : public Referee {
+    : public Referee
+{
 private:
-    static const char * oobMsg;
-    static const char * capturedMsg;
-    static const char * goalMsg;
-    static const char * ootMsg;
-    static const char * doneMsg;
-    static const char * inGameMsg;
-    static const int TURNOVER_TIME;
-    int M_episode;
-    int M_offense, M_defense;
-    int M_time;
-    int M_take_time;
-    int M_holder_unum;
-    char M_holder_side; // 'L' = left, 'R' = Right, 'U' = Unknown/Neutral
-    PVector M_prev_ball_pos;
-    int M_untouched_time;
-    int M_episode_over_time;
-    boost::mt19937 M_rng;
-    std::vector<std::pair<int,int> > M_offsets;
+  static const char *oobMsg;
+  static const char *capturedMsg;
+  static const char *goalMsg;
+  static const char *ootMsg;
+  static const char *doneMsg;
+  static const char *inGameMsg;
+  static const int TURNOVER_TIME;
+  int M_episode;
+  int M_offense, M_defense;
+  int M_time;
+  int M_take_time;
+  int M_holder_unum;
+  char M_holder_side; // 'L' = left, 'R' = Right, 'U' = Unknown/Neutral
+  PVector M_prev_ball_pos;
+  int M_untouched_time;
+  int M_episode_over_time;
+  // std::mt19937 M_rng;
+  boost::mt19937 M_rng;
+  std::vector<std::pair<int, int>> M_offsets;
 
 public:
-    HFORef( Stadium & stadium );
+  HFORef(Stadium &stadium);
 
-    virtual
-    ~HFORef()
-      { }
+  virtual ~HFORef() override
+  {
+  }
 
-    virtual
-    void analyse();
+  void kickTaken(const Player &,
+                 const double) override
+  {
+  }
 
-    virtual
-    void playModeChange( PlayMode pm );
+  void failedKickTaken(const Player &) override
+  {
+  }
+
+  void tackleTaken(const Player &,
+                   const double,
+                   const bool) override
+  {
+  }
+
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
+
+  void ballCaught(const Player &) override
+  {
+  }
+
+  void ballPunched(const Player &) override
+  {
+  }
+
+  void ballTouched(const Player &) override
+  {
+  }
+
+  void analyse() override;
+
+  void playModeChange(PlayMode pm) override;
 
 private:
-    bool inHFOArea(const PVector& pos);
+  bool inHFOArea(const PVector &pos);
 
-    void logHeader();
+  void logHeader();
 
-    void logEpisode( const char *endCond );
+  void logEpisode(const char *endCond);
 
-    void resetField();
+  void resetField();
 };
-
-
 
 /*--------------------------------------------------------*/
 
 class PenaltyRef
-    : public Referee {
+    : public Referee
+{
 private:
-    int M_timer;
-    int M_pen_nr_taken;
-    Side M_pen_side;
-    bool M_bDebug;
-    Side M_cur_pen_taker;
-    std::set< int > M_sLeftPenTaken;
-    std::set< int > M_sRightPenTaken;
+  int M_timer;
+  int M_pen_nr_taken;
+  Side M_pen_side;
+  bool M_bDebug;
+  Side M_cur_pen_taker;
+  std::set<int> M_sLeftPenTaken;
+  std::set<int> M_sRightPenTaken;
 
-    const Player * M_last_taker;
+  const Player *M_last_taker;
 
-    PVector M_prev_ball_pos;
+  PVector M_prev_ball_pos;
 
-    bool M_timeover;
+  bool M_timeover;
+
 public:
-    PenaltyRef( Stadium& stadium );
+  PenaltyRef(Stadium &stadium);
 
-    virtual
-    ~PenaltyRef() override
-      { }
+  virtual ~PenaltyRef() override
+  {
+  }
 
-    void kickTaken( const Player & kicker,
-                    const double accel_r ) override;
+  void kickTaken(const Player &kicker,
+                 const double accel_r) override;
 
-    void failedKickTaken( const Player & ) override
-      { }
+  void failedKickTaken(const Player &) override
+  {
+  }
 
-    void tackleTaken( const Player & tackler,
-                      const double accel_r,
-                      const bool foul ) override;
+  void tackleTaken(const Player &tackler,
+                   const double accel_r,
+                   const bool foul) override;
 
-    void failedTackleTaken( const Player &,
-                            const bool ) override
-      { }
+  void failedTackleTaken(const Player &,
+                         const bool) override
+  {
+  }
 
-    void ballCaught( const Player & catcher ) override;
+  void ballCaught(const Player &catcher) override;
 
-    void ballPunched( const Player & catcher ) override;
+  void ballPunched(const Player &catcher) override;
 
-    void ballTouched( const Player & ) override
-      { }
+  void ballTouched(const Player &) override
+  {
+  }
 
-    void analyse() override;
+  void analyse() override;
 
-    void playModeChange( PlayMode pm ) override;
+  void playModeChange(PlayMode pm) override;
 
 private:
+  void startPenaltyShootout();
 
-    void startPenaltyShootout();
+  void analyseImpl();
+  void handleTimeout(bool left_move_check,
+                     bool right_move_check);
+  void handleTimer(const bool left_move_check,
+                   const bool right_move_check);
 
-    void analyseImpl();
-    void handleTimeout( bool left_move_check,
-                        bool right_move_check );
-    void handleTimer( const bool left_move_check,
-                      const bool right_move_check );
+  void penalty_init();
+  void penalty_foul(const Side side);
+  void penalty_check_score();
 
-    void penalty_init();
-    void penalty_foul( const Side side );
-    void penalty_check_score( );
+  bool penalty_check_players(const Side side);
+  void penalty_place_all_players(const Side side);
+  void placeTakerTeamPlayers();
+  void placeOtherTeamPlayers();
 
-    bool penalty_check_players( const Side side );
-    void penalty_place_all_players( const Side side );
-    void placeTakerTeamPlayers();
-    void placeOtherTeamPlayers();
+  const Player *getCandidateTaker();
 
-    const Player * getCandidateTaker();
-
-    void penalty_miss( const Side side );
-    void penalty_score( const Side side );
-
+  void penalty_miss(const Side side);
+  void penalty_score(const Side side);
 };
 
-#endif //REFEREE_H
+#endif // REFEREE_H

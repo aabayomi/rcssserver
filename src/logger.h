@@ -133,7 +133,16 @@ public:
 
     void writeKeepawayHeader( const int keepers,
                               const int takers );
+
+    void writeHFOHeader( const int offense,
+                              const int defense );
+    
     void writeKeepawayLog( const Stadium & stadium,
+                           const int episode,
+                           const int time,
+                           const char * end_cond );
+    
+    void writeHFOLog( const Stadium & stadium,
                            const int episode,
                            const int time,
                            const char * end_cond );

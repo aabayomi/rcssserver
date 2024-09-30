@@ -509,7 +509,7 @@ bool Logger::openHFOLog()
     {
         std::cerr << __FILE__ << ": " << __LINE__
                   << " Exception caught! " << e.what()
-                  << "\nCould not create keepaway log directory '"
+                  << "\nCould not create hfo log directory '"
                   << ServerParam::instance().hfoLogDir()
                   << "'" << std::endl;
         return false;
@@ -1469,6 +1469,27 @@ void Logger::writeKeepawayHeader(const int keepers,
     }
 }
 
+
+void Logger::writeHFOHeader(const int M_offense,
+                                 const int M_defense)
+{
+    if (M_impl->hfo_log_)
+    {
+        M_impl->hfo_log_ << "# Offense: " << M_offense  << '\n'
+                           << "# Defense:  " << M_defense << '\n'
+                           << "# Description of Fields:\n"
+                           << "# 1) Episode number\n"
+                           << "# 2) Start time in simulator steps (100ms)\n"
+                           << "# 3) End time in simulator steps (100ms)\n"
+                           << "# 4) Duration in simulator steps (100ms)\n"
+                           << "# 5) Episode result\n"
+                           << "#\n"
+                           << std::flush;
+    }
+
+}
+
+
 void Logger::writeKeepawayLog(const Stadium &stadium,
                               const int episode,
                               const int time,
@@ -1484,6 +1505,29 @@ void Logger::writeKeepawayLog(const Stadium &stadium,
                            << std::endl;
     }
 }
+
+
+void Logger::writeHFOLog(const Stadium &stadium,
+                              const int episode,
+                              const int time,
+                              const char *end_cond)
+
+{
+    if (M_impl->hfo_log_)
+    {
+        M_impl->hfo_log_ << episode << "\t"
+                           << time << "\t"
+                           << stadium.time() << "\t"
+                           << stadium.time() - time << "\t"
+                           << end_cond
+                           << std::endl;
+    }
+}
+
+
+
+
+
 
 void Logger::writeTimes(const Stadium &stadium,
                         const std::chrono::system_clock::time_point &old_time,

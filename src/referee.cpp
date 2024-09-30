@@ -35,6 +35,12 @@
 #include <limits>
 #include <sstream>
 
+// TODO: find a way to remove boost from this file
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <algorithm>
+
 namespace
 {
     const int CLEAR_PLAYER_TIME = 5;
@@ -2724,9 +2730,23 @@ void KeepawayRef::logHeader()
     Logger::instance().writeKeepawayHeader(M_keepers, M_takers);
 }
 
+void HFORef::logHeader()
+{
+    Logger::instance().writeHFOHeader(M_offense,
+                                      M_defense);
+}
+
 void KeepawayRef::logEpisode(const char *end_cond)
 {
     Logger::instance().writeKeepawayLog(M_stadium, M_episode, M_time, end_cond);
+
+    ++M_episode;
+    M_time = M_stadium.time();
+}
+
+void HFORef::logEpisode(const char *end_cond)
+{
+    Logger::instance().writeHFOLog(M_stadium, M_episode, M_time, end_cond);
 
     ++M_episode;
     M_time = M_stadium.time();
@@ -2989,70 +3009,171 @@ bool HFORef::inHFOArea(const PVector &pos)
             std::fabs(pos.y) <= 0.5 * ServerParam::instance().PITCH_WIDTH);
 }
 
-void HFORef::logHeader()
-{
-    if (M_stadium.logger().hfoLog())
-    {
-        M_stadium.logger().hfoLog()
-            << "# Offense: " << M_offense << '\n'
-            << "# Defense:  " << M_defense << '\n'
-            << "# Description of Fields:\n"
-            << "# 1) Episode number\n"
-            << "# 2) Start time in simulator steps (100ms)\n"
-            << "# 3) End time in simulator steps (100ms)\n"
-            << "# 4) Duration in simulator steps (100ms)\n"
-            << "# 5) Episode result\n"
-            << "#\n"
-            << std::flush;
-    }
-}
+// void HFORef::logHeader()
+// {
+//     if (M_stadium.logger().hfoLog())
+//     {
+//         M_stadium.logger().hfoLog()
+//             << "# Offense: " << M_offense << '\n'
+//             << "# Defense:  " << M_defense << '\n'
+//             << "# Description of Fields:\n"
+//             << "# 1) Episode number\n"
+//             << "# 2) Start time in simulator steps (100ms)\n"
+//             << "# 3) End time in simulator steps (100ms)\n"
+//             << "# 4) Duration in simulator steps (100ms)\n"
+//             << "# 5) Episode result\n"
+//             << "#\n"
+//             << std::flush;
+//     }
+// }
 
-void HFORef::logEpisode(const char *endCond)
-{
-    if (M_stadium.logger().hfoLog())
-    {
-        M_stadium.logger().hfoLog() << M_episode << "\t"
-                                    << M_time << "\t"
-                                    << M_stadium.time() << "\t"
-                                    << M_stadium.time() - M_time << "\t"
-                                    << endCond
-                                    << std::endl;
-    }
-}
+// void HFORef::logEpisode(const char *endCond)
+// {
+//     if (M_stadium.logger().hfoLog())
+//     {
+//         M_stadium.logger().hfoLog() << M_episode << "\t"
+//                                     << M_time << "\t"
+//                                     << M_stadium.time() << "\t"
+//                                     << M_stadium.time() - M_time << "\t"
+//                                     << endCond
+//                                     << std::endl;
+//     }
+// }
+
+// void HFORef::resetField()
+// {
+//     double pitch_length = ServerParam::instance().PITCH_LENGTH;
+//     double half_pitch_length = 0.5 * pitch_length;
+//     double pitch_width = ServerParam::instance().PITCH_WIDTH;
+//     double min_ball_x =
+//         std::max(std::min(ServerParam::instance().hfoMinBallX(), 1.), 0.);
+//     double max_ball_x =
+//         std::max(std::min(ServerParam::instance().hfoMaxBallX(), 1.), 0.);
+//     max_ball_x = std::max(max_ball_x, min_ball_x);
+
+//     double ball_x = drand(min_ball_x * half_pitch_length,
+//                           max_ball_x * half_pitch_length, M_rng);
+//     double min_ball_y =
+//         std::max(std::min(ServerParam::instance().hfoMinBallY(), 1.), -1.);
+//     double max_ball_y =
+//         std::max(std::min(ServerParam::instance().hfoMaxBallY(), 1.), -1.);
+//     max_ball_y = std::max(max_ball_y, min_ball_y);
+//     double ball_y = drand(min_ball_y / 2.0 * pitch_width,
+//                           max_ball_y / 2.0 * pitch_width, M_rng);
+//     M_stadium.placeBall(NEUTRAL, PVector(ball_x, ball_y));
+//     M_prev_ball_pos = M_stadium.ball().pos();
+//     boost::variate_generator<boost::mt19937 &, boost::uniform_int<>>
+//         gen(M_rng, boost::uniform_int<>());
+//     std::random_shuffle(M_offsets.begin(), M_offsets.end(), gen);
+//     int offense_pos_on_ball = -1;
+//     int offense_count = 0;
+//     int hfo_offense_on_ball = ServerParam::instance().hfoOffenseOnBall();
+//     const Stadium::PlayerCont::iterator end = M_stadium.players().end();
+//     if (hfo_offense_on_ball > 0)
+//     {
+//         for (Stadium::PlayerCont::iterator p = M_stadium.players().begin();
+//              p != end;
+//              ++p)
+//         {
+//             if ((*p)->isEnabled() && (*p)->side() == LEFT)
+//             {
+//                 offense_count++;
+//             }
+//         }
+//         if (hfo_offense_on_ball > offense_count)
+//         {
+//             offense_pos_on_ball = irand(offense_count);
+//         }
+//         else
+//         {
+//             offense_pos_on_ball = hfo_offense_on_ball - 1;
+//         }
+//     }
+//     int offense_pos = 0;
+//     for (Stadium::PlayerCont::iterator p = M_stadium.players().begin();
+//          p != end;
+//          ++p)
+//     {
+//         if (!(*p)->isEnabled())
+//             continue;
+//         double x, y;
+//         if ((*p)->side() == LEFT)
+//         {
+//             if (offense_pos_on_ball == offense_pos)
+//             {
+//                 (*p)->place(PVector(ball_x - .1, ball_y));
+//                 offense_pos++;
+//                 continue;
+//             }
+//             std::pair<int, int> offset = M_offsets[offense_pos];
+//             x = ball_x + .1 * pitch_length * (drand(0, 1, M_rng) + offset.first);
+//             y = ball_y + .1 * pitch_length * (drand(0, 1, M_rng) + offset.second);
+//             x = std::min(std::max(x, -.1), half_pitch_length);
+//             y = std::min(std::max(y, -.4 * pitch_width), .4 * pitch_width);
+//             (*p)->place(PVector(x, y));
+//             offense_pos++;
+//         }
+//         else if ((*p)->side() == RIGHT)
+//         {
+//             if ((*p)->isGoalie())
+//             {
+//                 x = .5 * pitch_length;
+//                 y = 0;
+//             }
+//             else
+//             {
+//                 x = drand(.4 * pitch_length, .5 * pitch_length, M_rng);
+//                 y = drand(-.4 * pitch_width, .4 * pitch_width, M_rng);
+//             }
+//             (*p)->place(PVector(x, y));
+//         }
+//     }
+//     M_stadium.recoveryPlayers();
+//     M_take_time = 0;
+//     M_untouched_time = 0;
+//     M_holder_side = 'U';
+//     M_holder_unum = -1;
+//     M_time = M_stadium.time();
+// }
 
 void HFORef::resetField()
 {
     double pitch_length = ServerParam::instance().PITCH_LENGTH;
     double half_pitch_length = 0.5 * pitch_length;
     double pitch_width = ServerParam::instance().PITCH_WIDTH;
-    double min_ball_x =
-        std::max(std::min(ServerParam::instance().hfoMinBallX(), 1.), 0.);
-    double max_ball_x =
-        std::max(std::min(ServerParam::instance().hfoMaxBallX(), 1.), 0.);
+
+    double min_ball_x = std::max(std::min(ServerParam::instance().hfoMinBallX(), 1.), 0.);
+    double max_ball_x = std::max(std::min(ServerParam::instance().hfoMaxBallX(), 1.), 0.);
     max_ball_x = std::max(max_ball_x, min_ball_x);
-    double ball_x = drand(min_ball_x * half_pitch_length,
-                          max_ball_x * half_pitch_length, M_rng);
-    double min_ball_y =
-        std::max(std::min(ServerParam::instance().hfoMinBallY(), 1.), -1.);
-    double max_ball_y =
-        std::max(std::min(ServerParam::instance().hfoMaxBallY(), 1.), -1.);
+
+    // Replace drand with uniform_real_distribution
+    boost::random::uniform_real_distribution<> dist_ball_x(min_ball_x * half_pitch_length, max_ball_x * half_pitch_length);
+    double ball_x = dist_ball_x(M_rng);
+
+    double min_ball_y = std::max(std::min(ServerParam::instance().hfoMinBallY(), 1.), -1.);
+    double max_ball_y = std::max(std::min(ServerParam::instance().hfoMaxBallY(), 1.), -1.);
     max_ball_y = std::max(max_ball_y, min_ball_y);
-    double ball_y = drand(min_ball_y / 2.0 * pitch_width,
-                          max_ball_y / 2.0 * pitch_width, M_rng);
+
+    boost::random::uniform_real_distribution<> dist_ball_y(min_ball_y / 2.0 * pitch_width, max_ball_y / 2.0 * pitch_width);
+    double ball_y = dist_ball_y(M_rng);
+
     M_stadium.placeBall(NEUTRAL, PVector(ball_x, ball_y));
     M_prev_ball_pos = M_stadium.ball().pos();
-    boost::variate_generator<boost::mt19937 &, boost::uniform_int<>>
-        gen(M_rng, boost::uniform_int<>());
-    std::random_shuffle(M_offsets.begin(), M_offsets.end(), gen);
+
+    // Replace variate_generator with a lambda for random_shuffle
+    boost::random::uniform_int_distribution<> dist_shuffle(0, M_offsets.size() - 1);
+    auto rand_int = [&](int n)
+    { return dist_shuffle(M_rng) % n; };
+    std::random_shuffle(M_offsets.begin(), M_offsets.end(), rand_int);
+
     int offense_pos_on_ball = -1;
     int offense_count = 0;
     int hfo_offense_on_ball = ServerParam::instance().hfoOffenseOnBall();
     const Stadium::PlayerCont::iterator end = M_stadium.players().end();
+
     if (hfo_offense_on_ball > 0)
     {
-        for (Stadium::PlayerCont::iterator p = M_stadium.players().begin();
-             p != end;
-             ++p)
+        for (Stadium::PlayerCont::iterator p = M_stadium.players().begin(); p != end; ++p)
         {
             if ((*p)->isEnabled() && (*p)->side() == LEFT)
             {
@@ -3061,20 +3182,22 @@ void HFORef::resetField()
         }
         if (hfo_offense_on_ball > offense_count)
         {
-            offense_pos_on_ball = irand(offense_count);
+            // Replace irand with uniform_int_distribution
+            boost::random::uniform_int_distribution<> dist_irand(0, offense_count - 1);
+            offense_pos_on_ball = dist_irand(M_rng);
         }
         else
         {
             offense_pos_on_ball = hfo_offense_on_ball - 1;
         }
     }
+
     int offense_pos = 0;
-    for (Stadium::PlayerCont::iterator p = M_stadium.players().begin();
-         p != end;
-         ++p)
+    for (Stadium::PlayerCont::iterator p = M_stadium.players().begin(); p != end; ++p)
     {
         if (!(*p)->isEnabled())
             continue;
+
         double x, y;
         if ((*p)->side() == LEFT)
         {
@@ -3084,12 +3207,16 @@ void HFORef::resetField()
                 offense_pos++;
                 continue;
             }
+
             std::pair<int, int> offset = M_offsets[offense_pos];
-            x = ball_x + .1 * pitch_length * (drand(0, 1, M_rng) + offset.first);
-            y = ball_y + .1 * pitch_length * (drand(0, 1, M_rng) + offset.second);
+            boost::random::uniform_real_distribution<> dist_offset(0, 1);
+            x = ball_x + .1 * pitch_length * (dist_offset(M_rng) + offset.first);
+            y = ball_y + .1 * pitch_length * (dist_offset(M_rng) + offset.second);
+
             x = std::min(std::max(x, -.1), half_pitch_length);
             y = std::min(std::max(y, -.4 * pitch_width), .4 * pitch_width);
             (*p)->place(PVector(x, y));
+
             offense_pos++;
         }
         else if ((*p)->side() == RIGHT)
@@ -3101,12 +3228,16 @@ void HFORef::resetField()
             }
             else
             {
-                x = drand(.4 * pitch_length, .5 * pitch_length, M_rng);
-                y = drand(-.4 * pitch_width, .4 * pitch_width, M_rng);
+                boost::random::uniform_real_distribution<> dist_right_x(.4 * pitch_length, .5 * pitch_length);
+                boost::random::uniform_real_distribution<> dist_right_y(-.4 * pitch_width, .4 * pitch_width);
+
+                x = dist_right_x(M_rng);
+                y = dist_right_y(M_rng);
             }
             (*p)->place(PVector(x, y));
         }
     }
+
     M_stadium.recoveryPlayers();
     M_take_time = 0;
     M_untouched_time = 0;
